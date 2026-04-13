@@ -1,0 +1,5 @@
+pandas
+spacy
+faker
+transformers
+torch
