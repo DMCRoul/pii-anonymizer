@@ -37,7 +37,6 @@ def detect_phone_entities(text):
 
     return entities
 
-
 def detect_named_entities(text):
     entities = []
     doc = nlp(text)
@@ -63,8 +62,21 @@ def detect_named_entities(text):
                     "end": ent.end_char
                 })
 
-    return entities
+    # fallback для городов после "in"
+    import re
 
+    fallback_pattern = r"\bin\s+([A-Z][a-z]+)"
+    for match in re.finditer(fallback_pattern, text):
+        city = match.group(1)
+
+        entities.append({
+            "type": "LOCATION",
+            "value": city,
+            "start": match.start(1),
+            "end": match.end(1)
+        })
+
+    return entities
 
 def remove_duplicates(entities):
     unique_entities = []
