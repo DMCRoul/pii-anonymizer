@@ -28,3 +28,10 @@ def save_replacements_csv(replacements, filename="replacements.csv"):
         writer.writerows(replacements)
 
     return file_path
+
+
+def save_dataframe_csv(df, filename="anonymized_data.csv"):
+    ensure_output_dir()
+    file_path = OUTPUT_DIR / filename
+    df.to_csv(file_path, index=False, encoding="utf-8")
+    return file_path
