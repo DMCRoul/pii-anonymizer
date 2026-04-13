@@ -2,7 +2,6 @@ import argparse
 from pathlib import Path
 
 from loader import load_text_file, load_csv_file
-from detector import detect_all
 from anonymizer import anonymize_text
 from writer import (
     save_anonymized_text,
@@ -10,17 +9,24 @@ from writer import (
     save_dataframe_csv,
     save_summary,
 )
-from miner import analyze_entities
+from adaptive_logic import run_adaptive_detection
 
 
-def process_txt(file_path):
+def process_txt(file_path: str) -> None:
     text = load_text_file(file_path)
 
     print("=== Исходный TXT ===\n")
     print(text)
 
-    entities = detect_all(text)
-    analysis = analyze_entities(entities)
+    result = run_adaptive_detection(text)
+    entities = result["entities"]
+    analysis = result["analysis"]
+
+    print("\n=== Adaptive detection ===")
+    print("Base risk level:", result["base_analysis"]["risk_level"])
+    print("Adaptive mode:", result["adaptive_mode"])
+    print("Transformer threshold:", result["transformer_min_score"])
+    print("Second pass:", result["second_pass"])
 
     print("\n=== Найденные сущности ===")
     for entity in entities:
@@ -44,7 +50,7 @@ def process_txt(file_path):
     print("\nTXT обработан и сохранён в output/")
 
 
-def build_dataset_summary(df):
+def build_dataset_summary(df) -> dict:
     total_records = len(df)
     low_risk = (df["risk_level"] == "LOW").sum()
     medium_risk = (df["risk_level"] == "MEDIUM").sum()
@@ -52,7 +58,7 @@ def build_dataset_summary(df):
     average_risk_score = round(df["risk_score"].mean(), 2)
 
     return {
-        "total_records": total_records,
+        "total_records": int(total_records),
         "low_risk": int(low_risk),
         "medium_risk": int(medium_risk),
         "high_risk": int(high_risk),
@@ -60,7 +66,7 @@ def build_dataset_summary(df):
     }
 
 
-def process_csv(file_path):
+def process_csv(file_path: str) -> None:
     df = load_csv_file(file_path)
 
     if "text" not in df.columns:
@@ -71,12 +77,17 @@ def process_csv(file_path):
     risk_levels = []
     total_entities_list = []
     entity_count_summaries = []
+    adaptive_modes = []
+    thresholds = []
+    second_pass_flags = []
 
     for text in df["text"]:
         text = str(text)
 
-        entities = detect_all(text)
-        analysis = analyze_entities(entities)
+        result = run_adaptive_detection(text)
+        entities = result["entities"]
+        analysis = result["analysis"]
+
         anonymized_text, _ = anonymize_text(text, entities)
 
         anonymized_texts.append(anonymized_text)
@@ -84,12 +95,18 @@ def process_csv(file_path):
         risk_levels.append(analysis["risk_level"])
         total_entities_list.append(analysis["total_entities"])
         entity_count_summaries.append(str(analysis["entity_counts"]))
+        adaptive_modes.append(result["adaptive_mode"])
+        thresholds.append(result["transformer_min_score"])
+        second_pass_flags.append(result["second_pass"])
 
     df["anonymized_text"] = anonymized_texts
     df["risk_score"] = risk_scores
     df["risk_level"] = risk_levels
     df["total_entities"] = total_entities_list
     df["entity_counts"] = entity_count_summaries
+    df["adaptive_mode"] = adaptive_modes
+    df["transformer_threshold"] = thresholds
+    df["second_pass"] = second_pass_flags
 
     saved_csv_path = save_dataframe_csv(df)
 
@@ -109,8 +126,10 @@ def process_csv(file_path):
     print("Summary saved:", summary_path)
 
 
-def main():
-    parser = argparse.ArgumentParser(description="PII detection, anonymization and data mining tool")
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="PII detection, anonymization and data mining tool"
+    )
     parser.add_argument("--file", required=True, help="Path to input file (.txt or .csv)")
     args = parser.parse_args()
 
@@ -124,7 +143,6 @@ def main():
             process_csv(file_path)
         else:
             raise ValueError("Поддерживаются только .txt и .csv файлы")
-
     except Exception as e:
         print("Ошибка:", e)
 

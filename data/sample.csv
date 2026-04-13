@@ -1,5 +1,4 @@
 id,text
-1,My name is Damir Varitlov from Prague
-2,Contact me at damir@example.com
-3,Phone: +420 777 123 456
-4,Anna Novak lives in Brno
+1,"My name is Damir Varitlov. My email is damir@example.com. My phone is +420 777 123 456. I live in Prague."
+2,"Hello this is a normal message."
+3,"Contact Anna Novak at anna@example.com."

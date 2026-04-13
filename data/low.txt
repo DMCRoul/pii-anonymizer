@@ -1,0 +1,3 @@
+Hello, this is a normal technical message.
+The server was restarted successfully.
+No personal information is included here.

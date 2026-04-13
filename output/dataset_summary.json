@@ -1,7 +1,7 @@
 {
-    "total_records": 4,
-    "low_risk": 4,
-    "medium_risk": 0,
-    "high_risk": 0,
-    "average_risk_score": 3.0
+    "total_records": 3,
+    "low_risk": 1,
+    "medium_risk": 1,
+    "high_risk": 1,
+    "average_risk_score": 10.0
 }
