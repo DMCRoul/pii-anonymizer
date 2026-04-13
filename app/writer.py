@@ -1,0 +1,30 @@
+from pathlib import Path
+import csv
+
+
+OUTPUT_DIR = Path("output")
+
+
+def ensure_output_dir():
+    OUTPUT_DIR.mkdir(exist_ok=True)
+
+
+def save_anonymized_text(text, filename="anonymized.txt"):
+    ensure_output_dir()
+    file_path = OUTPUT_DIR / filename
+    file_path.write_text(text, encoding="utf-8")
+    return file_path
+
+
+def save_replacements_csv(replacements, filename="replacements.csv"):
+    ensure_output_dir()
+    file_path = OUTPUT_DIR / filename
+
+    with file_path.open("w", newline="", encoding="utf-8") as csvfile:
+        fieldnames = ["original", "replacement", "type"]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        writer.writeheader()
+        writer.writerows(replacements)
+
+    return file_path
