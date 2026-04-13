@@ -1,6 +1,8 @@
 from loader import load_text_file, load_csv_file
 from detector import detect_all
 from anonymizer import anonymize_text
+from miner import analyze_entities
+
 from writer import (
     save_anonymized_text,
     save_replacements_csv,
@@ -17,10 +19,18 @@ def process_txt():
     print(text)
 
     entities = detect_all(text)
+    analysis = analyze_entities(entities)
 
     print("\n=== Найденные сущности ===")
     for entity in entities:
         print(entity)
+
+    print("\n=== Data Mining анализ ===")
+    print("Количество сущностей:", analysis["entity_counts"])
+    print("Риск-паттерны:", analysis["patterns"])
+    print("Risk score:", analysis["risk_score"])
+    print("Risk level:", analysis["risk_level"])
+    print("Всего сущностей:", analysis["total_entities"])
 
     anonymized_text, replacements = anonymize_text(text, entities)
 

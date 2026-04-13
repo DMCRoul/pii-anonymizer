@@ -1,6 +1,6 @@
 import re
 import spacy
-
+from transformer_detector import detect_transformer_entities
 
 nlp = spacy.load("en_core_web_sm")
 
@@ -95,10 +95,35 @@ def detect_all(text):
     email_entities = detect_email_entities(text)
     phone_entities = detect_phone_entities(text)
     ner_entities = detect_named_entities(text)
+    transformer_entities = detect_transformer_entities(text)
 
-    all_entities = email_entities + phone_entities + ner_entities
+    all_entities = (
+        email_entities
+        + phone_entities
+        + ner_entities
+        + transformer_entities
+    )
+
     all_entities = remove_duplicates(all_entities)
-
+    all_entities = remove_overlapping_entities(all_entities)
     all_entities.sort(key=lambda x: x["start"])
 
     return all_entities
+
+
+
+def remove_overlapping_entities(entities):
+    filtered = []
+
+    for entity in sorted(entities, key=lambda x: (x["start"], -(x["end"] - x["start"]))):
+        overlap = False
+
+        for existing in filtered:
+            if not (entity["end"] <= existing["start"] or entity["start"] >= existing["end"]):
+                overlap = True
+                break
+
+        if not overlap:
+            filtered.append(entity)
+
+    return filtered
