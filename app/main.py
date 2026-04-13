@@ -1,18 +1,19 @@
+import argparse
+from pathlib import Path
+
 from loader import load_text_file, load_csv_file
 from detector import detect_all
 from anonymizer import anonymize_text
-from miner import analyze_entities
-
 from writer import (
     save_anonymized_text,
     save_replacements_csv,
     save_dataframe_csv,
+    save_summary,
 )
+from miner import analyze_entities
 
 
-def process_txt():
-    file_path = "data/sample.txt"
-
+def process_txt(file_path):
     text = load_text_file(file_path)
 
     print("=== Исходный TXT ===\n")
@@ -42,9 +43,24 @@ def process_txt():
 
     print("\nTXT обработан и сохранён в output/")
 
-def process_csv():
-    file_path = "data/sample.csv"
 
+def build_dataset_summary(df):
+    total_records = len(df)
+    low_risk = (df["risk_level"] == "LOW").sum()
+    medium_risk = (df["risk_level"] == "MEDIUM").sum()
+    high_risk = (df["risk_level"] == "HIGH").sum()
+    average_risk_score = round(df["risk_score"].mean(), 2)
+
+    return {
+        "total_records": total_records,
+        "low_risk": int(low_risk),
+        "medium_risk": int(medium_risk),
+        "high_risk": int(high_risk),
+        "average_risk_score": average_risk_score,
+    }
+
+
+def process_csv(file_path):
     df = load_csv_file(file_path)
 
     if "text" not in df.columns:
@@ -82,6 +98,7 @@ def process_csv():
     print(f"\nФайл сохранён: {saved_csv_path}")
 
     dataset_summary = build_dataset_summary(df)
+    summary_path = save_summary(dataset_summary)
 
     print("\n=== Data Mining сводка по CSV ===")
     print("Всего записей:", dataset_summary["total_records"])
@@ -89,28 +106,24 @@ def process_csv():
     print("MEDIUM risk:", dataset_summary["medium_risk"])
     print("HIGH risk:", dataset_summary["high_risk"])
     print("Средний risk score:", dataset_summary["average_risk_score"])
-
-
-def build_dataset_summary(df):
-    total_records = len(df)
-    low_risk = (df["risk_level"] == "LOW").sum()
-    medium_risk = (df["risk_level"] == "MEDIUM").sum()
-    high_risk = (df["risk_level"] == "HIGH").sum()
-    average_risk_score = round(df["risk_score"].mean(), 2)
-
-    return {
-        "total_records": total_records,
-        "low_risk": int(low_risk),
-        "medium_risk": int(medium_risk),
-        "high_risk": int(high_risk),
-        "average_risk_score": average_risk_score,
-    }
+    print("Summary saved:", summary_path)
 
 
 def main():
+    parser = argparse.ArgumentParser(description="PII detection, anonymization and data mining tool")
+    parser.add_argument("--file", required=True, help="Path to input file (.txt or .csv)")
+    args = parser.parse_args()
+
+    file_path = args.file
+    suffix = Path(file_path).suffix.lower()
+
     try:
-        process_txt()
-        process_csv()
+        if suffix == ".txt":
+            process_txt(file_path)
+        elif suffix == ".csv":
+            process_csv(file_path)
+        else:
+            raise ValueError("Поддерживаются только .txt и .csv файлы")
 
     except Exception as e:
         print("Ошибка:", e)
