@@ -37,6 +37,9 @@ def process_txt(file_path: str) -> None:
     print("Риск-паттерны:", analysis["patterns"])
     print("Risk score:", analysis["risk_score"])
     print("Risk level:", analysis["risk_level"])
+    print("Причины риска:")
+    for reason in analysis["risk_reasons"]:
+        print("-", reason)
     print("Всего сущностей:", analysis["total_entities"])
 
     anonymized_text, replacements = anonymize_text(text, entities)
@@ -57,12 +60,41 @@ def build_dataset_summary(df) -> dict:
     high_risk = (df["risk_level"] == "HIGH").sum()
     average_risk_score = round(df["risk_score"].mean(), 2)
 
+    records_with_pii = int((df["total_entities"] > 0).sum())
+    high_risk_percentage = round((high_risk / total_records) * 100, 2) if total_records else 0
+
+    entity_totals = {"PERSON": 0, "EMAIL": 0, "PHONE": 0, "LOCATION": 0}
+    pattern_totals = {}
+
+    for _, row in df.iterrows():
+        entity_counts_str = str(row["entity_counts"])
+
+        for entity_type in entity_totals:
+            if entity_type in entity_counts_str:
+                try:
+                    import ast
+                    parsed_counts = ast.literal_eval(entity_counts_str)
+                    for key, value in parsed_counts.items():
+                        if key in entity_totals:
+                            entity_totals[key] += value
+                except Exception:
+                    pass
+                break
+
+    most_common_entity_type = None
+    if any(entity_totals.values()):
+        most_common_entity_type = max(entity_totals, key=entity_totals.get)
+
     return {
         "total_records": int(total_records),
+        "records_with_pii": records_with_pii,
         "low_risk": int(low_risk),
         "medium_risk": int(medium_risk),
         "high_risk": int(high_risk),
+        "high_risk_percentage": high_risk_percentage,
         "average_risk_score": average_risk_score,
+        "most_common_entity_type": most_common_entity_type,
+        "entity_totals": entity_totals,
     }
 
 
@@ -80,6 +112,7 @@ def process_csv(file_path: str) -> None:
     adaptive_modes = []
     thresholds = []
     second_pass_flags = []
+    risk_reasons_list = []
 
     for text in df["text"]:
         text = str(text)
@@ -98,6 +131,7 @@ def process_csv(file_path: str) -> None:
         adaptive_modes.append(result["adaptive_mode"])
         thresholds.append(result["transformer_min_score"])
         second_pass_flags.append(result["second_pass"])
+        risk_reasons_list.append(" | ".join(analysis["risk_reasons"]))
 
     df["anonymized_text"] = anonymized_texts
     df["risk_score"] = risk_scores
@@ -107,6 +141,7 @@ def process_csv(file_path: str) -> None:
     df["adaptive_mode"] = adaptive_modes
     df["transformer_threshold"] = thresholds
     df["second_pass"] = second_pass_flags
+    df["risk_reasons"] = risk_reasons_list
 
     saved_csv_path = save_dataframe_csv(df)
 
@@ -124,7 +159,6 @@ def process_csv(file_path: str) -> None:
     print("HIGH risk:", dataset_summary["high_risk"])
     print("Средний risk score:", dataset_summary["average_risk_score"])
     print("Summary saved:", summary_path)
-
 
 def main() -> None:
     parser = argparse.ArgumentParser(
