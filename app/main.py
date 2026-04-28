@@ -1,6 +1,6 @@
 import argparse
 from pathlib import Path
-
+import ast
 from loader import load_text_file, load_csv_file
 from anonymizer import anonymize_text
 from writer import (
@@ -53,7 +53,87 @@ def process_txt(file_path: str) -> None:
     print("\nTXT обработан и сохранён в output/")
 
 
-def build_dataset_summary(df) -> dict:
+import ast
+
+
+def build_dataset_summary(df, entity_totals: dict) -> dict:
+    total_records = len(df)
+    low_risk = (df["risk_level"] == "LOW").sum()
+    medium_risk = (df["risk_level"] == "MEDIUM").sum()
+    high_risk = (df["risk_level"] == "HIGH").sum()
+    average_risk_score = round(df["risk_score"].mean(), 2)
+
+    records_with_pii = int((df["total_entities"] > 0).sum())
+    high_risk_percentage = round((high_risk / total_records) * 100, 2) if total_records else 0
+
+    max_count = max(entity_totals.values()) if entity_totals else 0
+    most_common_entity_type = None
+
+    if max_count > 0:
+        most_common_entity_type = [
+            entity_type
+            for entity_type, count in entity_totals.items()
+            if count == max_count
+        ]
+
+    return {
+        "total_records": int(total_records),
+        "records_with_pii": records_with_pii,
+        "low_risk": int(low_risk),
+        "medium_risk": int(medium_risk),
+        "high_risk": int(high_risk),
+        "high_risk_percentage": high_risk_percentage,
+        "average_risk_score": average_risk_score,
+        "most_common_entity_type": most_common_entity_type,
+        "entity_totals": entity_totals,
+    }
+
+    total_records = len(df)
+    low_risk = (df["risk_level"] == "LOW").sum()
+    medium_risk = (df["risk_level"] == "MEDIUM").sum()
+    high_risk = (df["risk_level"] == "HIGH").sum()
+    average_risk_score = round(df["risk_score"].mean(), 2)
+
+    records_with_pii = int((df["total_entities"] > 0).sum())
+    high_risk_percentage = round((high_risk / total_records) * 100, 2) if total_records else 0
+
+    entity_totals = {
+        "PERSON": 0,
+        "EMAIL": 0,
+        "PHONE": 0,
+        "LOCATION": 0,
+    }
+
+    for value in df["entity_counts"]:
+        try:
+            counts = ast.literal_eval(str(value))
+            for entity_type, count in counts.items():
+                if entity_type in entity_totals:
+                    entity_totals[entity_type] += count
+        except Exception:
+            continue
+
+    max_count = max(entity_totals.values()) if entity_totals else 0
+    most_common_entity_type = None
+
+    if max_count > 0:
+        most_common_entity_type = [
+            entity_type
+            for entity_type, count in entity_totals.items()
+            if count == max_count
+        ]
+
+    return {
+        "total_records": int(total_records),
+        "records_with_pii": records_with_pii,
+        "low_risk": int(low_risk),
+        "medium_risk": int(medium_risk),
+        "high_risk": int(high_risk),
+        "high_risk_percentage": high_risk_percentage,
+        "average_risk_score": average_risk_score,
+        "most_common_entity_type": most_common_entity_type,
+        "entity_totals": entity_totals,
+    }
     total_records = len(df)
     low_risk = (df["risk_level"] == "LOW").sum()
     medium_risk = (df["risk_level"] == "MEDIUM").sum()
@@ -114,12 +194,23 @@ def process_csv(file_path: str) -> None:
     second_pass_flags = []
     risk_reasons_list = []
 
+    dataset_entity_totals = {
+    "PERSON": 0,
+    "EMAIL": 0,
+    "PHONE": 0,
+    "LOCATION": 0,
+}
+    
     for text in df["text"]:
         text = str(text)
 
         result = run_adaptive_detection(text)
         entities = result["entities"]
         analysis = result["analysis"]
+
+        for entity_type, count in analysis["entity_counts"].items():
+            if entity_type in dataset_entity_totals:
+                dataset_entity_totals[entity_type] += count
 
         anonymized_text, _ = anonymize_text(text, entities)
 
@@ -149,7 +240,7 @@ def process_csv(file_path: str) -> None:
     print(df)
     print(f"\nФайл сохранён: {saved_csv_path}")
 
-    dataset_summary = build_dataset_summary(df)
+    dataset_summary = build_dataset_summary(df, dataset_entity_totals)
     summary_path = save_summary(dataset_summary)
 
     print("\n=== Data Mining сводка по CSV ===")
