@@ -1,0 +1,23 @@
+text,expected_types
+"My name is Damir Varitlov. My email is damir@example.com. My phone is +420 777 123 456. I live in Prague.","PERSON,EMAIL,PHONE,LOCATION"
+"Hello this is a normal technical message.",""
+"Contact Anna Novak at anna@example.com.","PERSON,EMAIL"
+"Phone: +420 777 123 456","PHONE"
+"John Smith lives in Brno.","PERSON,LOCATION"
+
+"Prague is a beautiful city.","LOCATION"
+"Call me tomorrow at 10:30.",""
+"My username is john123.",""
+"The server is located in Berlin.","LOCATION"
+"User ID: 1234567890",""
+
+"Email: support@company.com","EMAIL"
+"Michael was mentioned in the report.","PERSON"
+"Coordinates: 50.0755, 14.4378",""
+"Visit London or Paris this summer.","LOCATION"
+"Contact: 777123456","PHONE"
+
+"No personal data here.",""
+"Meeting with Mr. Novak.","PERSON"
+"Email me at fake.email@domain","EMAIL"
+"Device number: 999-888-777",""
