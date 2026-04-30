@@ -5,3 +5,6 @@ __pycache__/
 venv/
 .env/
 .vscode/
+# output files
+output/*
+!output/.gitkeep

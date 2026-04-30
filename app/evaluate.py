@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pandas as pd
 
 from adaptive_logic import run_adaptive_detection
@@ -73,8 +75,11 @@ def evaluate(file_path: str = "data/evaluation.csv") -> None:
 
     metrics = calculate_metrics(total_tp, total_fp, total_fn)
 
+    output_dir = Path("output")
+    output_dir.mkdir(exist_ok=True)
+
     result_df = pd.DataFrame(rows)
-    result_df.to_csv("output/evaluation_results.csv", index=False)
+    result_df.to_csv(output_dir / "evaluation_results.csv", index=False)
 
     print("\n=== Evaluation results ===")
     print(result_df)

@@ -1,4 +1,0 @@
-id,text,anonymized_text,risk_score,risk_level,total_entities,entity_counts,adaptive_mode,transformer_threshold,second_pass
-1,My name is Damir Varitlov. My email is damir@example.com. My phone is +420 777 123 456. I live in Prague.,My name is Haley Terry. My email is zmiller@example.net. My phone is +1-304-676-7465x0006. I live in North Sarah.,22,HIGH,4,"{'PERSON': 1, 'EMAIL': 1, 'PHONE': 1, 'LOCATION': 1}",aggressive,0.45,True
-2,Hello this is a normal message.,Hello this is a normal message.,0,LOW,0,{},conservative,0.8,False
-3,Contact Anna Novak at anna@example.com.,Contact Brittany Sweeney at bethany59@example.org.,8,MEDIUM,2,"{'PERSON': 1, 'EMAIL': 1}",standard,0.6,False

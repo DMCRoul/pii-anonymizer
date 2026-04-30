@@ -1,5 +1,6 @@
 from pathlib import Path
 import csv
+import json
 
 
 OUTPUT_DIR = Path("output")
@@ -35,8 +36,6 @@ def save_dataframe_csv(df, filename="anonymized_data.csv"):
     file_path = OUTPUT_DIR / filename
     df.to_csv(file_path, index=False, encoding="utf-8")
     return file_path
-
-import json
 
 
 def save_summary(summary, filename="dataset_summary.json"):

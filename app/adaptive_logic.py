@@ -1,6 +1,7 @@
 from detector import detect_base, detect_transformer_layer, merge_entities
 from miner import analyze_entities
 
+
 RISK_MODE_CONFIG = {
     "LOW": {
         "transformer_min_score": 0.80,
@@ -40,7 +41,10 @@ def run_adaptive_detection(text: str) -> dict:
 
     # 4) При высоком риске делаем дополнительный проход
     if config["second_pass"]:
-        second_pass_entities = detect_transformer_layer(text, min_score=0.35)
+        second_pass_entities = detect_transformer_layer(
+            text,
+            min_score=0.35,
+        )
         entities = merge_entities(entities, second_pass_entities)
         final_analysis = analyze_entities(entities)
 

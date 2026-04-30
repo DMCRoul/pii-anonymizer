@@ -1,4 +1,5 @@
 from pathlib import Path
+
 import pandas as pd
 
 
@@ -8,9 +9,7 @@ def load_text_file(file_path: str) -> str:
     if not path.exists():
         raise FileNotFoundError("Файл не найден")
 
-    text = path.read_text(encoding="utf-8")
-
-    return text
+    return path.read_text(encoding="utf-8")
 
 
 def load_csv_file(file_path: str) -> pd.DataFrame:
